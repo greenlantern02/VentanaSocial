@@ -183,34 +183,26 @@ def get_all(
 ):
     query = db.query(WindowDB)
     
-    # Apply database-level filters
-    if isDuplicate is not None:
-        query = query.filter(WindowDB.isDuplicate == isDuplicate)
+    filters = {
+        'isDuplicate': isDuplicate,
+        'daytime': daytime,
+        'location': location,
+        'window_type': type,
+        'open_state': openState,
+        'material': material,
+        'panes': panes,
+        'covering': covering,
+    }
     
-    if daytime:
-        query = query.filter(WindowDB.daytime == daytime)
-    
-    if location:
-        query = query.filter(WindowDB.location == location)
-    
-    if type:
-        query = query.filter(WindowDB.window_type == type)
-    
-    if openState:
-        query = query.filter(WindowDB.open_state == openState)
-   
-    if material:
-        query = query.filter(WindowDB.material == material)
+    # Apply all non-None filters at once
+    for field, value in filters.items():
+        if value is not None:
+            query = query.filter(getattr(WindowDB, field) == value)
 
-    if panes:
-        query = query.filter(WindowDB.panes == panes)
-
-    if covering:
-        query = query.filter(WindowDB.covering == covering)
-    
+        # Handle search separately (different operation)
     if search:
         query = query.filter(WindowDB.description.ilike(f"%{search}%"))
-    
+
     # Get total count for pagination
     total = query.count()
     

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
+from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -9,6 +9,8 @@ import uuid
 import json
 import base64
 import requests
+import math
+from typing import Optional
 from dotenv import load_dotenv
 
 from database import Base, engine, SessionLocal
@@ -24,7 +26,6 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Windows API")
 
 UPLOAD_DIR = "uploads"
-
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
@@ -45,7 +46,6 @@ app.add_middleware(
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
-
 def get_db():
     db = SessionLocal()
     try:
@@ -57,7 +57,6 @@ def hash_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 def call_ollama_stub(image_path: str):
-   
     api_key = os.getenv("OLLAMA_API_KEY")
 
     if not api_key:
@@ -88,9 +87,8 @@ def call_ollama_stub(image_path: str):
             content = (response.json()['choices'][0]['message']['content']).split("json")[1].strip().strip("'").strip("```").strip()
             # Try to parse JSON from response
             try:
-                return content
+                return json.loads(content)
             except:
-                # If JSON parsing fails, extract what we can
                 pass
                 
     except Exception as e:
@@ -138,15 +136,26 @@ async def upload_window(
         f.write(data)
 
     # Llamar IA
-    ai = call_ollama_stub(path)
+    ai_response = call_ollama_stub(path)
+    
+    # Extract structured data
+    description = ai_response.get("description", "")
+    structured_data = ai_response.get("structured_data", {})
 
     window_db = WindowDB(
         id=file_id,
         hash=file_hash,
         isDuplicate=is_duplicate,
         createdAt=int(time.time()),
-        ai= ai,  # Remove str() here
         imageUrl=f"http://localhost:8000/{UPLOAD_DIR}/{filename}",
+        description=description,
+        daytime=structured_data.get("daytime"),
+        location=structured_data.get("location"),
+        window_type=structured_data.get("type"),
+        material=structured_data.get("material"),
+        panes=structured_data.get("panes"),
+        covering=structured_data.get("covering"),
+        open_state=structured_data.get("openState"),
     )
 
     db.add(window_db)
@@ -155,12 +164,69 @@ async def upload_window(
 
     return JSONResponse(content=Window.from_orm(window_db).dict())
 
-
 @app.get("/api/windows")
-def get_all(db: Session = Depends(get_db)):
-    windows = db.query(WindowDB).order_by(WindowDB.createdAt.desc()).all()
-    return [Window.from_orm(w).dict() for w in windows]
+def get_all(
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(12, ge=1, le=100, description="Items per page"),
 
+    # Filters
+    daytime: Optional[str] = Query(None, description="Filter by daytime"),
+    location: Optional[str] = Query(None, description="Filter by location"),
+    type: Optional[str] = Query(None, description="Filter by window type"),
+    openState: Optional[str] = Query(None, description="Filter by open state"),
+    material: Optional[str] = Query(None, description="Filter by material"),
+    panes: Optional[str] = Query(None, description="Filter by panes"),
+    covering: Optional[str] = Query(None, description="Filter by covering"),
+    isDuplicate: Optional[bool] = Query(None, description="Filter by duplicate status"),
+    search: Optional[str] = Query(None, description="Search in descriptions")
+):
+    query = db.query(WindowDB)
+    
+    # Apply database-level filters
+    if isDuplicate is not None:
+        query = query.filter(WindowDB.isDuplicate == isDuplicate)
+    
+    if daytime:
+        query = query.filter(WindowDB.daytime == daytime)
+    
+    if location:
+        query = query.filter(WindowDB.location == location)
+    
+    if type:
+        query = query.filter(WindowDB.window_type == type)
+    
+    if openState:
+        query = query.filter(WindowDB.open_state == openState)
+   
+    if material:
+        query = query.filter(WindowDB.material == material)
+
+    if panes:
+        query = query.filter(WindowDB.panes == panes)
+
+    if covering:
+        query = query.filter(WindowDB.covering == covering)
+    
+    if search:
+        query = query.filter(WindowDB.description.ilike(f"%{search}%"))
+    
+    # Get total count for pagination
+    total = query.count()
+    
+    # Apply pagination
+    windows = query.order_by(WindowDB.createdAt.desc())\
+                  .offset((page - 1) * limit)\
+                  .limit(limit)\
+                  .all()
+    
+    return {
+        "data": [Window.from_orm(w).dict() for w in windows],
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "totalPages": math.ceil(total / limit) if total > 0 else 1
+    }
 
 @app.get("/api/windows/{id}")
 def get_one(id: str, db: Session = Depends(get_db)):
@@ -169,7 +235,6 @@ def get_one(id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No encontrado")
     return Window.from_orm(w).dict()
 
-
 @app.get("/api/windows/{id}/duplicates")
 def get_dupes(id: str, db: Session = Depends(get_db)):
     w = db.query(WindowDB).filter(WindowDB.id == id).first()
@@ -177,7 +242,6 @@ def get_dupes(id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No encontrado")
     duplicates = db.query(WindowDB).filter(WindowDB.hash == w.hash, WindowDB.id != id).all()
     return [Window.from_orm(d).dict() for d in duplicates]
-
 
 @app.get("/health")
 def health():

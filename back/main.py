@@ -21,19 +21,16 @@ from urllib.parse import unquote
 
 load_dotenv()
 
-# ---- MongoDB Setup ----
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://localhost:27017")
 client = MongoClient(MONGO_URL)
 db = client["windows_app"]
 windows_collection = db["windows"]
 
-# ---- FastAPI App ----
 app = FastAPI(title="Windows API")
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ---- CORS ----
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -47,33 +44,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+MAX_FILE_SIZE = 5 * 1024 * 1024 
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
-
-# Security helpers
-
-
-def is_allowed_file_type(filename: str, content_type: str = None) -> bool:
-    """Check if file type is allowed"""
-    ext = os.path.splitext(filename.lower())[-1]
-    if ext not in ALLOWED_EXTENSIONS:
-        return False
-    if content_type and content_type not in ALLOWED_MIME_TYPES:
-        return False
-    return True
-
-def sanitize_string(value: str, max_length: int = 100) -> str:
-    """Sanitize string input for MongoDB queries"""
-    if not value:
-        return ""
-    # Remove special regex chars and limit length
-    sanitized = re.sub(r'[^\w\s-]', '', value)[:max_length]
-    return sanitized.strip()
-
-# ---- Helpers ----
-def hash_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
 
 def call_ollama_stub(image_path: str):
     api_key = os.getenv("OLLAMA_API_KEY")
@@ -87,9 +60,9 @@ def call_ollama_stub(image_path: str):
         }
     
     try:
-        # Validate image path is within UPLOAD_DIR
         image_path = os.path.abspath(image_path)
         upload_dir = os.path.abspath(UPLOAD_DIR)
+
         if not image_path.startswith(upload_dir):
             raise ValueError("Invalid image path")
             
@@ -119,7 +92,6 @@ def call_ollama_stub(image_path: str):
             except json.JSONDecodeError:
                 pass
     except Exception as e:
-        # Don't expose internal error details
         print(f"AI analysis error: {e}")
 
     # fallback
@@ -131,14 +103,15 @@ def call_ollama_stub(image_path: str):
         }
     }
 
-# ---- Routes ----
 @app.post("/api/windows")
 async def upload_window(file: UploadFile = File(...)):
-    # Security validations
     if not file.filename:
         raise HTTPException(status_code=400, detail="Nombre de archivo requerido")
     
-    if not is_allowed_file_type(file.filename, file.content_type):
+    ext = os.path.splitext(file.filename.lower())[-1]
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Tipo de archivo no permitido")
+    if file.content_type and file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Tipo de archivo no permitido")
     
     data = await file.read()
@@ -147,9 +120,8 @@ async def upload_window(file: UploadFile = File(...)):
     if len(data) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="Archivo excede tamaño máximo")
 
-    file_hash = hash_bytes(data)
+    file_hash = hashlib.sha256(data).hexdigest()
 
-    # Check duplicates by hash
     existing = windows_collection.find_one({"hash": file_hash})
     is_duplicate = existing is not None
 
@@ -168,12 +140,10 @@ async def upload_window(file: UploadFile = File(...)):
         with open(path, "wb") as f:
             f.write(data)
 
-        # AI analysis
         ai_response = call_ollama_stub(path)
-        description = ai_response.get("description", "")[:500]  # Limit description length
+        description = ai_response.get("description", "")[:500]
         structured = ai_response.get("structured_data", {})
 
-    # Build document
     doc = {
         "_id": str(uuid.uuid4()),
         "hash": file_hash,
@@ -235,10 +205,10 @@ def get_all(
     search: Optional[str] = Query(None, max_length=100),
 ):
     query = {}
+
     if isDuplicate is not None:
         query["isDuplicate"] = isDuplicate
     
-    # Sanitize and validate inputs
     valid_values = {
         'daytime': ['day', 'night', 'unknown'],
         'location': ['interior', 'exterior', 'unknown'],
@@ -249,7 +219,6 @@ def get_all(
         'openState': ['open', 'closed', 'ajar', 'unknown']
     }
     
-    # Build query with validation
     if daytime and daytime in valid_values['daytime']:
         query["structured_data.daytime"] = daytime
     if location and location in valid_values['location']:
@@ -260,13 +229,16 @@ def get_all(
         query["structured_data.openState"] = openState
     if material and material in valid_values['material']:
         query["structured_data.material"] = material
-    if panes and panes in valid_values['panes']:
-        query["structured_data.panes"] = panes
+    if panes:
+        if panes == "3+":
+            query["structured_data.panes"] = {"$gte": 3}
+        else:
+            query["structured_data.panes"] = int(panes)
     if covering and covering in valid_values['covering']:
         query["structured_data.covering"] = covering
     
     if search:
-        sanitized_search = sanitize_string(search)
+        sanitized_search = re.sub(r'[^\w\s-]', '', search)[:20].strip()
         if sanitized_search:
             query["description"] = {"$regex": sanitized_search, "$options": "i"}
 

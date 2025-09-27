@@ -71,7 +71,6 @@ export default function Home() {
     }
   };
 
-  // Update URL helper
   const updateURL = (newFilters: Filters, newPage: number) => {
     const params = new URLSearchParams();
     Object.entries(newFilters).forEach(([k, v]) => params.set(k, String(v)));

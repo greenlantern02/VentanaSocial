@@ -26,13 +26,13 @@ export interface WindowData {
   createdAt: number;
   description?: string;
   structured_data: {
-    daytime?: string;
-    location?: string;
-    type?: string;
-    material?: string;
-    panes?: string;
-    covering?: string;
-    openState?: string;
+    daytime: string;
+    location: string;
+    type: string;
+    material: string;
+    panes: string;
+    covering: string;
+    openState: string;
   };
 }
 
@@ -45,15 +45,15 @@ export interface PaginatedResponse {
 }
 
 export interface Filters {
-  daytime?: string;
-  location?: string;
-  type?: string;
-  material?: string;
-  panes?: string;
-  covering?: string;
-  openState?: string;
-  isDuplicate?: boolean;
-  search?: string;
+  daytime: string;
+  location: string;
+  type: string;
+  material: string;
+  panes: string;
+  covering: string;
+  openState: string;
+  isDuplicate: boolean;
+  search: string;
 }
 
 export interface UploadResult {
@@ -67,11 +67,11 @@ export interface UploadResult {
 }
 
 interface StructuredData {
-  daytime?: string;
-  location?: string;
-  type?: string;
-  material?: string;
-  panes?: string;
-  covering?: string;
-  openState?: string;
+  daytime: string;
+  location: string;
+  type: string;
+  material: string;
+  panes: string;
+  covering: string;
+  openState: string;
 }

@@ -1,0 +1,41 @@
+services:
+  back:
+    build:
+      context: ./back
+    container_name: fastapi-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./back:/app
+      - ./back/uploads:/app/uploads
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+    depends_on:
+      - mongo
+
+  front:
+    build:
+      context: ./front
+    container_name: nextjs-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./front:/app
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - back
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo-db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

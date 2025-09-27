@@ -179,7 +179,7 @@ async def upload_window(file: UploadFile = File(...)):
         "hash": file_hash,
         "isDuplicate": is_duplicate,
         "createdAt": int(time.time()),
-        "imageUrl": f"http://localhost:8000/uploads/{filename}",
+        "imageUrl": filename,
         "description": description,
         "structured_data": {
             "daytime": structured.get("daytime"),

@@ -20,6 +20,7 @@ import {
 import { WindowData } from "@/types/general";
 
 import Image from "next/image";
+import imageLoader from "@/util/imageLoader";
 
 export default function WindowCard({window}: {window: WindowData}) {
     return (
@@ -32,6 +33,7 @@ export default function WindowCard({window}: {window: WindowData}) {
             </CardHeader>
             <CardContent>
                 <Image
+                    loader={imageLoader}
                     src={window.imageUrl}
                     alt={window.description || "Ventana"}
                     className="w-full h-auto rounded mb-4"

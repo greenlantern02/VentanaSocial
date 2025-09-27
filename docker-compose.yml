@@ -25,6 +25,7 @@ services:
       - /app/node_modules
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_IMAGE_URL=http://localhost:8000/uploads/
     depends_on:
       - back
 

@@ -44,11 +44,15 @@ export default function Home() {
         cache: "no-store",
       });
 
+
       if (!res.ok) {
         throw new Error(`Error en el servidor (${res.status})`);
       }
 
       const result: PaginatedResponse = await res.json();
+
+      console.log("fetch", result)
+
 
       // Server-side pagination - use API response directly
       if (result && result.data && Array.isArray(result.data)) {
@@ -181,7 +185,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {windows.map((window) => {
                 return (
-                  <WindowCard window={window} />
+                  <WindowCard window={window} key={window._id}/>
                 );
               })}
             </div>

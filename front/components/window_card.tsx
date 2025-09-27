@@ -16,28 +16,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-interface WindowData {
-  id: string;
-  hash: string;
-  isDuplicate: boolean;
-  imageUrl: string;
-  createdAt: number;
-  description?: string;
-  structured_data: {
-    daytime?: string;
-    location?: string;
-    type?: string;
-    material?: string;
-    panes?: string;
-    covering?: string;
-    openState?: string;
-  };
-}
+
+import { WindowData } from "@/types/general";
+
 import Image from "next/image";
 
 export default function WindowCard({window}: {window: WindowData}) {
     return (
-        <Card key={window.id}>
+        <Card key={window._id}>
             <CardHeader>
                 <CardTitle>{window.description || "No description available"}</CardTitle>
                 <CardDescription>
@@ -63,7 +49,7 @@ export default function WindowCard({window}: {window: WindowData}) {
                     </TableHeader>
                     <TableBody>
                         {Object.entries(window.structured_data || {}).map(([key, value]) => (
-                            <TableRow key={key}>
+                            <TableRow key={window._id + key}>
                                 <TableCell className="font-medium capitalize">
                                     {key.replace(/([A-Z])/g, ' $1').trim()}
                                 </TableCell>
@@ -75,7 +61,7 @@ export default function WindowCard({window}: {window: WindowData}) {
             </CardContent>
             <CardFooter className="flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
-                    ID: {window.id.substring(0, 8)}...
+                    _id: {window._id.substring(0, 8)}...
                 </p>
                 {window.isDuplicate && (
                     <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">

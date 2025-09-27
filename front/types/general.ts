@@ -19,7 +19,7 @@ export interface FilterDefinition{
 }
 
 export interface WindowData {
-  id: string;
+  _id: string;
   hash: string;
   isDuplicate: boolean;
   imageUrl: string;
@@ -54,4 +54,24 @@ export interface Filters {
   openState?: string;
   isDuplicate?: boolean;
   search?: string;
+}
+
+export interface UploadResult {
+  _id: string;
+  hash: string;
+  isDuplicate: boolean;
+  createdAt: number;
+  imageUrl: string;
+  description?: string;
+  structured_data: StructuredData;
+}
+
+interface StructuredData {
+  daytime?: string;
+  location?: string;
+  type?: string;
+  material?: string;
+  panes?: string;
+  covering?: string;
+  openState?: string;
 }

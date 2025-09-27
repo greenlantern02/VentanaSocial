@@ -3,25 +3,7 @@
 import WindowCard from "@/components/window_card";
 import { useState } from "react";
 
-interface StructuredData {
-  daytime?: string;
-  location?: string;
-  type?: string;
-  material?: string;
-  panes?: string;
-  covering?: string;
-  openState?: string;
-}
-
-interface UploadResult {
-  id: string;
-  hash: string;
-  isDuplicate: boolean;
-  createdAt: number;
-  imageUrl: string;
-  description?: string;
-  structured_data: StructuredData;
-}
+import { UploadResult } from "@/types/general";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);

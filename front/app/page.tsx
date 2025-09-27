@@ -1,5 +1,6 @@
 // app/page.tsx
 "use client";
+import WindowCard from "@/components/window_card";
 import { useState } from "react";
 
 interface StructuredData {
@@ -101,67 +102,7 @@ export default function Home() {
       )}
 
       {result && (
-        <div className="mt-8 w-full max-w-lg border rounded-lg p-4 shadow">
-          <h2 className="text-xl font-semibold mb-2">Resultado</h2>
-          
-          <img
-            src={result.imageUrl}
-            alt={result.description || "Ventana subida"}
-            className="w-full h-auto rounded mb-4"
-          />
-
-          <div className="space-y-2">
-            <p>
-              <span className="font-medium">Descripción:</span>{" "}
-              {result.description || "No disponible"}
-            </p>
-
-            <div>
-              <span className="font-medium">Datos Estructurados:</span>
-              <div className="mt-2 bg-gray-50 p-3 rounded text-sm">
-                <div className="grid grid-cols-2 gap-2">
-                  <div><strong>Momento:</strong> {result.structured_data.daytime || "N/A"}</div>
-                  <div><strong>Ubicación:</strong> {result.structured_data.location || "N/A"}</div>
-                  <div><strong>Tipo:</strong> {result.structured_data.type || "N/A"}</div>
-                  <div><strong>Material:</strong> {result.structured_data.material || "N/A"}</div>
-                  <div><strong>Paneles:</strong> {result.structured_data.panes || "N/A"}</div>
-                  <div><strong>Cobertura:</strong> {result.structured_data.covering || "N/A"}</div>
-                  <div className="col-span-2"><strong>Estado:</strong> {result.structured_data.openState || "N/A"}</div>
-                </div>
-              </div>
-            </div>
-
-            <p>
-              <span className="font-medium">Hash:</span>{" "}
-              <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
-                {result.hash}
-              </span>
-            </p>
-
-            <p>
-              <span className="font-medium">Duplicado:</span>{" "}
-              <span className={`px-2 py-1 rounded text-xs ${
-                result.isDuplicate 
-                  ? 'bg-yellow-100 text-yellow-800' 
-                  : 'bg-green-100 text-green-800'
-              }`}>
-                {result.isDuplicate ? "Sí" : "No"}
-              </span>
-            </p>
-
-            <p>
-              <span className="font-medium">Fecha:</span>{" "}
-              {new Date(result.createdAt * 1000).toLocaleString()}
-            </p>
-
-            <p>
-              <span className="font-medium">ID:</span>{" "}
-              <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
-                {result.id}
-              </span>
-            </p>
-          </div>
-        </div>
+        <WindowCard window={result}/>
       )}
     </main>
   );

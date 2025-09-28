@@ -38,3 +38,4 @@ next-env.d.ts
 back/uploads/
 
 back/db.sqlite3
+back/__pycache__/main.cpython-310.pyc

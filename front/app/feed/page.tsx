@@ -100,7 +100,7 @@ export default function Home() {
     setSearchTerm("");
     const newPage = 1;
     setPage(newPage);
-    router.replace("/");
+    router.replace("/feed");
   };
 
   // Fetch when page or filters change

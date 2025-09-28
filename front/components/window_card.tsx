@@ -24,7 +24,7 @@ import imageLoader from "@/util/imageLoader";
 
 export default function WindowCard({window}: {window: WindowData}) {
     return (
-        <Card key={window._id}>
+        <Card key={window._id} className="max-w-96">
             <CardHeader>
                 <CardTitle>{window.description || "No description available"}</CardTitle>
                 <CardDescription>
@@ -36,7 +36,7 @@ export default function WindowCard({window}: {window: WindowData}) {
                     loader={imageLoader}
                     src={window.imageUrl}
                     alt={window.description || "Ventana"}
-                    className="w-full h-auto rounded mb-4"
+                    className="w-full max-h-48 rounded mb-4 object-contain"
                     width={400}
                     height={300}
                 />

@@ -122,7 +122,6 @@ export default function Home() {
                 placeholder="Search descriptions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               />
               <Button onClick={handleSearch} variant="outline">Search</Button>
             </div>

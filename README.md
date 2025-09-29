@@ -31,10 +31,11 @@ cd VentanaSocial
 
 Create a `.env` file in the root directory:
 ```bash
-OLLAMA_API_KEY="API-KEY"
+MONGO_URL=mongodb://mongo:27017
+AI_URL = https://api.openai.com/v1/chat/completions or http://localhost:11434/api/chat
+AI_API_KEY=${AI_API_KEY}
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_IMAGE_URL=http://localhost:8000/uploads/
-AI_URL = https://api.openai.com/v1/chat/completions or http://localhost:11434/api/chat
 ```
 
 3. **Start all services with Docker Compose**

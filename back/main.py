@@ -30,6 +30,7 @@ app = FastAPI(title="Windows API")
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+AI_URL = os.getenv("AI_URL")
 
 origins = [
     "http://localhost:3000",
@@ -37,6 +38,7 @@ origins = [
     "http://localhost:11434",
     "http://127.0.0.1:11434",
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -48,8 +50,9 @@ MAX_FILE_SIZE = 5 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ALLOWED_MIME_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
 
-def call_ollama_stub(image_path: str):
-    api_key = os.getenv("OLLAMA_API_KEY")
+#Function to call the AI service for analyzing the image contents.
+def call_ai_analyze(image_path: str):
+    api_key = os.getenv("AI_API_KEY")
     if not api_key:
         return {
             "description": "Window detected - analysis unavailable", 
@@ -70,7 +73,7 @@ def call_ollama_stub(image_path: str):
             base64_image = base64.b64encode(f.read()).decode("utf-8")
         
         response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
+            AI_URL,
             headers={"Authorization": f"Bearer {api_key}"},
             json={
                 "model": "gpt-4o-mini",
@@ -103,6 +106,7 @@ def call_ollama_stub(image_path: str):
         }
     }
 
+#Endpoint to upload a new image to the db
 @app.post("/api/windows")
 async def upload_window(file: UploadFile = File(...)):
     if not file.filename:
@@ -140,7 +144,7 @@ async def upload_window(file: UploadFile = File(...)):
         with open(path, "wb") as f:
             f.write(data)
 
-        ai_response = call_ollama_stub(path)
+        ai_response = call_ai_analyze(path)
         description = ai_response.get("description", "")[:500]
         structured = ai_response.get("structured_data", {})
 
@@ -165,6 +169,7 @@ async def upload_window(file: UploadFile = File(...)):
     windows_collection.insert_one(doc)
     return JSONResponse(content=doc)
 
+#Endpoint to serve static files
 @app.get("/uploads/{filename}")
 async def serve_upload(
     filename: str,
@@ -190,6 +195,7 @@ async def serve_upload(
     
     return FileResponse(file_path)
 
+#Endpoint to retrieve with pagination and filtration the existing window images.
 @app.get("/api/windows")
 def get_all(
     page: int = Query(1, ge=1, le=1000),
@@ -258,6 +264,7 @@ def get_all(
         "totalPages": math.ceil(total / limit) if total > 0 else 1,
     }
 
+#Endpoint to retrieve a single window upload
 @app.get("/api/windows/{id}")
 def get_one(id: str):
     # Validate ID format (UUID)
@@ -275,6 +282,7 @@ def get_one(id: str):
         print(f"Database error: {e}")
         raise HTTPException(status_code=500, detail="Database error")
 
+#Endpoint to retrieve only the windows that are duplicates
 @app.get("/api/windows/{id}/duplicates")
 def get_dupes(id: str):
     # Validate ID format (UUID)
@@ -293,6 +301,7 @@ def get_dupes(id: str):
         print(f"Database error: {e}")
         raise HTTPException(status_code=500, detail="Database error")
 
+#Endpoint for status retrieval
 @app.get("/health")
 def health():
     return {"status": "ok"}

@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-fastapi = "*"
 pymongo = "*"
 python-dotenv = "*"
 requests = "*"
@@ -12,6 +11,8 @@ uvicorn = "*"
 python-multipart = "*"
 pytest = "*"
 httpx = "*"
+gunicorn = "*"
+fastapi = {extras = ["standard"], version = "*"}
 
 [dev-packages]
 

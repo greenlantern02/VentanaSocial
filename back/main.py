@@ -107,7 +107,7 @@ def call_ai_analyze(image_path: str):
     }
 
 #Endpoint to upload a new image to the db
-@app.post("/api/windows")
+@app.post("/api/windows/")
 async def upload_window(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="Nombre de archivo requerido")

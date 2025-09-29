@@ -39,7 +39,7 @@ def test_upload_and_insert(mock_db):
     
     file_content = b"fakeimagedata"
     response = client.post(
-        "/api/windows",
+        "/api/windows/",
         files={"file": ("test.jpg", io.BytesIO(file_content), "image/jpeg")},
     )
     assert response.status_code == 200

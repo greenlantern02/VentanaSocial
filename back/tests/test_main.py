@@ -27,7 +27,7 @@ def test_health():
 def test_upload_rejects_empty_file():
     file_content = b""
     response = client.post(
-        "/api/windows",
+        "/api/windows/",
         files={"file": ("test.jpg", io.BytesIO(file_content), "image/jpeg")},
     )
     assert response.status_code == 400

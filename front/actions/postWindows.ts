@@ -5,7 +5,7 @@ export async function postWindows(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/api/windows`, {
+  const res = await fetch(`${API_URL}/api/windows/`, {
     method: "POST",
     body: formData,
   });

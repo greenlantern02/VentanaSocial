@@ -3,6 +3,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# 1. Define ARGs to receive values from docker-compose build args
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_IMAGE_URL
+
+# 2. Set the ARGs as ENVs so Next.js build (pnpm next build) can read them
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_IMAGE_URL=$NEXT_PUBLIC_IMAGE_URL
+
 # Install pnpm
 RUN npm install -g pnpm
 
@@ -16,7 +24,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build Next.js app
-RUN pnpm build
+RUN pnpm next build
 
 
 # ---- Production stage ----
@@ -32,12 +40,11 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules 
 
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_IMAGE_URL
 
-# Set them as env vars
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_IMAGE_URL=$NEXT_PUBLIC_IMAGE_URL
 

@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner"; // or from "@/components/ui/use-toast" if using shadcn
+import { postWindows } from "@/actions/postWindows";
 
 const schema = z.object({
   file: z
@@ -35,31 +36,18 @@ export default function Home() {
     defaultValues: { file: undefined },
   });
 
-  async function onSubmit(values: z.infer<typeof schema>) {
-    setLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", values.file);
-
-      const res = await fetch("http://localhost:8000/api/windows", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Error en el servidor (${res.status})`);
-      }
-
-      const data: UploadResult = await res.json();
-      setResult(data);
-      toast.success("Imagen subida correctamente");
-    } catch (err: any) {
-      toast.error(err.message || "Error inesperado");
-    } finally {
-      setLoading(false);
-    }
+async function onSubmit(values: z.infer<typeof schema>) {
+  setLoading(true);
+  try {
+    const data: UploadResult = await postWindows(values.file);
+    setResult(data);
+    toast.success("Imagen subida correctamente");
+  } catch (err: any) {
+    toast.error(err.message || "Error inesperado");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <main className="flex h-full flex-col items-center justify-center p-6">

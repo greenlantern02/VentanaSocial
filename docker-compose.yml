@@ -10,20 +10,24 @@ services:
       - ./back/uploads:/app/uploads
     environment:
       - MONGO_URL=${MONGO_URL}
-      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
-      - AI_URL = ${AI_URL}
+      - AI_API_KEY=${AI_API_KEY}
+      - AI_URL=${AI_URL}
     depends_on:
       - mongo
 
   front:
     build:
       context: ./front
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_IMAGE_URL=${NEXT_PUBLIC_IMAGE_URL}
     container_name: nextjs-app
     ports:
       - "3000:3000"
     volumes:
       - ./front:/app
       - /app/node_modules
+      - /app/.next
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_IMAGE_URL=${NEXT_PUBLIC_IMAGE_URL}

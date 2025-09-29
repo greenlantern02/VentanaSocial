@@ -9,8 +9,9 @@ services:
       - ./back:/app
       - ./back/uploads:/app/uploads
     environment:
-      - MONGO_URL=mongodb://mongo:27017
+      - MONGO_URL=${MONGO_URL}
       - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - AI_URL = ${AI_URL}
     depends_on:
       - mongo
 
@@ -24,8 +25,8 @@ services:
       - ./front:/app
       - /app/node_modules
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_IMAGE_URL=http://localhost:8000/uploads/
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_IMAGE_URL=${NEXT_PUBLIC_IMAGE_URL}
     depends_on:
       - back
 

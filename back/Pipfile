@@ -10,6 +10,8 @@ python-dotenv = "*"
 requests = "*"
 uvicorn = "*"
 python-multipart = "*"
+pytest = "*"
+httpx = "*"
 
 [dev-packages]
 
